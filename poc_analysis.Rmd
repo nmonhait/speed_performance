@@ -1,0 +1,128 @@
+---
+output:
+  html_document: default
+  css: styles.css
+  pdf_document: default
+  always_allow_html: yes
+  params
+---
+<img src="images/logo.png" style="position:absolute;top:0px;right:0px;" />
+<div class="watermark">DRAFT</div>
+
+# Text  
+preliminary info...ect ect ect... 
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libs, include = FALSE}
+library(tidyverse)
+library(tidyquant)
+library(readxl)
+library(plotly)
+library(ggthemes)
+library(DT)
+```
+
+```{r clean, include = FALSE}
+#read in data
+prodata <- read_excel("prodata.xlsx")
+
+#clead data
+##add difference column
+prodata_long_time <- prodata %>% 
+  select(1:8) %>% 
+  gather(type, value, -...1) 
+
+prodata_long_stride <- prodata %>% 
+  select(1,9:11) %>% 
+  gather(type, value, -...1)
+
+prodata_long_rest <- prodata %>% 
+  select(1,12:14) %>% 
+  gather(type, value, -...1)
+```
+
+# Velocity Profile  
+
+explanation, etc.....
+
+```{r time_plot, include = FALSE}
+time_plot <- prodata_long_time %>% 
+  rename(name = ...1) %>% 
+  ggplot(aes(x = type, y = value, fill = name)) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "Acceleration, 3pt",
+    x= "Measurement",
+    y = "Time (s)",
+    fill = ""
+  ) +
+  theme_few() +
+  scale_fill_manual(values = c("firebrick4", "black"))
+
+time_plot_int <- ggplotly(time_plot)
+```
+
+```{r show_time_plot, echo=FALSE}
+time_plot_int
+```
+
+```{r stride_plot, include = FALSE}
+stride_plot <- prodata_long_stride %>% 
+  rename(name = ...1) %>% 
+  ggplot(aes(x = type, y = value, fill = name)) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "Stride Analysis",
+    x= "Measurement",
+    y = "Stride",
+    fill = ""
+  ) +
+  theme_few() +
+  scale_fill_manual(values = c("firebrick4", "black"))
+
+stride_plot_int <- ggplotly(stride_plot)
+```
+```{r show_stride_plot, echo= FALSE}
+stride_plot_int
+```
+
+```{r raw_data, echo = FALSE}
+datatable(prodata)
+```
+
+
+# Mechanical Profile  
+
+explanation, etc.....  
+
+# Sequencing Profile  
+
+```{r speed_distance, include = FALSE}
+speed_distance <- read_excel("prodata.xlsx", sheet = "speed_distance")
+sd_plot <- speed_distance %>% 
+  ggplot(aes(x = distance, y = speed)) +
+  geom_vline(xintercept = 2, size = 0.3, linetype = "dashed") +
+  geom_text(x = 1.5, label = "Step 1", y = 10, angle = 90) +
+  geom_vline(xintercept = 11.3, size = 0.3, linetype = "dashed") +
+  geom_text(x = 10.7, label = "Step 7", y = 10, angle = 90) +
+  geom_vline(xintercept = 26.9, size = 0.3, linetype = "dashed") +
+  geom_line(color = "firebrick4") +
+  geom_point(size = 2, color = "firebrick4") +
+  scale_x_continuous(limits = c(0,32)) +
+  theme_few() +
+  labs(
+    title = "Speed by Distance",
+    x = "Distance (yd)",
+    y = "Speed (mph)"
+  )
+```
+```{r show_sd_plot, echo = FALSE}
+ggplotly(sd_plot)
+```
+ 

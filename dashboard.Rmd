@@ -1,0 +1,126 @@
+---
+title: "Speed Analysis"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    theme: "spacelab"
+    runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(tidyquant)
+library(readxl)
+library(plotly)
+library(ggthemes)
+library(DT)
+```
+
+```{r clean, include = FALSE}
+#read in data
+prodata <- read_excel("prodata.xlsx")
+
+#clead data
+##add difference column
+prodata_long_time <- prodata %>% 
+  select(1:8) %>% 
+  gather(type, value, -...1) 
+
+prodata_long_stride <- prodata %>% 
+  select(1,9:11) %>% 
+  gather(type, value, -...1)
+
+prodata_long_rest <- prodata %>% 
+  select(1,12:14) %>% 
+  gather(type, value, -...1)
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+Select athlete to render current analysis.
+
+```{r}
+selectInput("n_breaks", label = "Select athlete",
+            choices = c("World Standard", "Brian Burt", "Jeff Allison"), selected = "World Standard")
+
+```
+
+Row {data-height=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r speed_distance, include = FALSE}
+speed_distance <- read_excel("prodata.xlsx", sheet = "speed_distance")
+sd_plot <- speed_distance %>% 
+  ggplot(aes(x = distance, y = speed)) +
+  geom_vline(xintercept = 2, size = 0.3, linetype = "dashed") +
+  geom_text(x = 1.5, label = "Step 1", y = 10, angle = 90) +
+  geom_vline(xintercept = 11.3, size = 0.3, linetype = "dashed") +
+  geom_text(x = 10.7, label = "Step 7", y = 10, angle = 90) +
+  geom_vline(xintercept = 26.9, size = 0.3, linetype = "dashed") +
+  geom_line(color = "firebrick4") +
+  geom_point(size = 2, color = "firebrick4") +
+  scale_x_continuous(limits = c(0,32)) +
+  theme_few() +
+  labs(
+    title = "Speed by Distance",
+    x = "Distance (yd)",
+    y = "Speed (mph)"
+  )
+```
+```{r show_sd_plot, echo = FALSE}
+ggplotly(sd_plot)
+```
+
+Row {data-height=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r stride_plot, include = FALSE}
+stride_plot <- prodata_long_stride %>% 
+  rename(name = ...1) %>% 
+  ggplot(aes(x = type, y = value, fill = name)) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "Stride Analysis",
+    x= "Measurement",
+    y = "Stride",
+    fill = ""
+  ) +
+  theme_few() +
+  scale_fill_manual(values = c("firebrick4", "black"))
+
+stride_plot_int <- ggplotly(stride_plot)
+```
+```{r show_stride_plot, echo= FALSE}
+stride_plot_int
+```
+
+### Chart C
+
+```{r time_plot, include = FALSE}
+time_plot <- prodata_long_time %>% 
+  rename(name = ...1) %>% 
+  ggplot(aes(x = type, y = value, fill = name)) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "Acceleration, 3pt",
+    x= "Measurement",
+    y = "Time (s)",
+    fill = ""
+  ) +
+  theme_few() +
+  scale_fill_manual(values = c("firebrick4", "black"))
+
+time_plot_int <- ggplotly(time_plot)
+```
+
+```{r show_time_plot, echo=FALSE}
+time_plot_int
+```
+
